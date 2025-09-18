@@ -5,6 +5,8 @@ import axios from 'axios';
 import Pitch from './components/Pitch';
 import TeamsCarousel from './components/TeamsCarousel';
 import RoleModal from './components/RoleModal';
+import AuthModal from './components/AuthModal'; // Importar AuthModal
+import { useAuth } from './context/AuthContext'; // Importar useAuth
 import html2canvas from 'html2canvas';
 import './index.css';
 
@@ -47,6 +49,9 @@ const dualTeamZoneMap = {
 
 // Forzando la actualización para Vercel
 function App() {
+  const { user, logout } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
   // Core board state
   const [gameMode, setGameMode] = useState('single');
   const [playersOnPitch, setPlayersOnPitch] = useState([]);
@@ -249,7 +254,24 @@ function App() {
                     </select>
                 </div>
                 <div className="flex items-center space-x-4">
-                    {/* UserMenu, Save, etc. would go here */}
+                    {user ? (
+                        <div className="flex items-center space-x-4">
+                            <span className="text-sm font-medium">Hola, {user.username}</span>
+                            <button 
+                                onClick={logout}
+                                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-md text-sm font-medium"
+                            >
+                                Logout
+                            </button>
+                        </div>
+                    ) : (
+                        <button 
+                            onClick={() => setIsAuthModalOpen(true)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+                        >
+                            Login / Registro
+                        </button>
+                    )}
                 </div>
             </div>
             <div className="mt-2">
@@ -298,6 +320,8 @@ function App() {
           playerName={selectedPlayer ? selectedPlayer.name.split(' ')[0] : ''}
           roles={selectedPlayer ? (dualTeamZoneMap['1,1'] || []) : []}
         />
+
+        <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
         {/* Other modals and the toolbar would need to be re-added and adapted */}
 
