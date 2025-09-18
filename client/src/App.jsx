@@ -45,7 +45,7 @@ const dualTeamZoneMap = {
   '6,1': [{ role: 'DFD', line: 'defense' }, { role: 'LTD', line: 'defense' }],
 };
 
-
+// Forzando la actualización para Vercel
 function App() {
   // Core board state
   const [gameMode, setGameMode] = useState('single');
