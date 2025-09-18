@@ -73,7 +73,7 @@ function App() {
 
   // --- DATA FETCHING ---
   useEffect(() => {
-    axios.get('http://localhost:5000/api/leagues')
+    axios.get('/api/leagues')
       .then(response => {
         setLeagues(response.data);
         if (response.data.length > 0) {
@@ -85,7 +85,7 @@ function App() {
 
   useEffect(() => {
     if (!selectedLeague) return;
-    axios.get(`http://localhost:5000/api/teams?leagueId=${selectedLeague}`)
+    axios.get(`/api/teams?leagueId=${selectedLeague}`)
       .then(response => {
         const fetchedTeams = response.data;
         setTeams(fetchedTeams);
