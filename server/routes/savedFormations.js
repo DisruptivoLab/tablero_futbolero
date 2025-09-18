@@ -1,12 +1,12 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const SavedFormation = require('../models/SavedFormation');
-const { ensureAuthenticated } = require('../middleware/auth');
+const auth = require('../middleware/auth');
 
 const router = express.Router();
 
 // Get user's saved formations
-router.get('/', ensureAuthenticated, async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     const formations = await SavedFormation.find({ userId: req.user._id })
       .sort({ updatedAt: -1 });
@@ -18,7 +18,7 @@ router.get('/', ensureAuthenticated, async (req, res) => {
 
 // Save formation
 router.post('/', [
-  ensureAuthenticated,
+  auth,
   body('name').isLength({ min: 1, max: 100 }).trim().escape()
 ], async (req, res) => {
   try {
@@ -49,7 +49,7 @@ router.post('/', [
 
 // Update formation
 router.put('/:id', [
-  ensureAuthenticated,
+  auth,
   body('name').isLength({ min: 1, max: 100 }).trim().escape()
 ], async (req, res) => {
   try {
@@ -87,7 +87,7 @@ router.put('/:id', [
 });
 
 // Delete formation
-router.delete('/:id', ensureAuthenticated, async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   try {
     const formation = await SavedFormation.findOneAndDelete({ 
       _id: req.params.id, 

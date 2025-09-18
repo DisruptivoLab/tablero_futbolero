@@ -7,8 +7,7 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// TODO: Move this to a .env file
-const JWT_SECRET = 'your-super-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Register
 router.post('/register', [

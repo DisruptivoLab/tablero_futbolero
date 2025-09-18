@@ -2,59 +2,46 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useAuth } from '../context/AuthContext';
 
-const schema = z.object({
+const registerSchema = z.object({
   username: z.string().min(3, 'Username debe tener al menos 3 caracteres'),
   email: z.string().email('Email inválido'),
-  password: z.string().min(8, 'Contraseña debe tener al menos 8 caracteres'),
-  confirmPassword: z.string().min(8, 'Contraseña debe tener al menos 8 caracteres'),
+  password: z.string().min(6, 'Contraseña debe tener al menos 6 caracteres'),
+  confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Las contraseñas no coinciden',
   path: ['confirmPassword'],
 });
 
-const AuthModal = ({ isOpen, onClose, onRegister, onLogin }) => {
+const loginSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'Contraseña debe tener al menos 6 caracteres'),
+});
+
+const AuthModal = ({ isOpen, onClose }) => {
   const [isRegister, setIsRegister] = useState(true);
   const [error, setError] = useState('');
+  const { login, register: authRegister } = useAuth();
+
   const { register, handleSubmit, formState: { errors }, reset } = useForm({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(isRegister ? registerSchema : loginSchema),
   });
 
   const onSubmit = async (data) => {
-    try {
-      if (isRegister) {
-        const response = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        });
-        if (response.ok) {
-          const user = await response.json();
-          localStorage.setItem('token', user.token);
-          onRegister(user);
-          onClose();
-          reset();
-        } else {
-          setError('Error al registrarse');
-        }
-      } else {
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        });
-        if (response.ok) {
-          const user = await response.json();
-          localStorage.setItem('token', user.token);
-          onLogin(user);
-          onClose();
-          reset();
-        } else {
-          setError('Credenciales incorrectas');
-        }
-      }
-    } catch (err) {
-      setError('Error de conexión');
+    setError('');
+    let result;
+    if (isRegister) {
+      result = await authRegister(data.username, data.email, data.password);
+    } else {
+      result = await login(data.email, data.password);
+    }
+
+    if (result.success) {
+      onClose();
+      reset();
+    } else {
+      setError(result.message || 'Ocurrió un error');
     }
   };
 
@@ -124,7 +111,11 @@ const AuthModal = ({ isOpen, onClose, onRegister, onLogin }) => {
           </button>
         </form>
         <button
-          onClick={() => setIsRegister(!isRegister)}
+          onClick={() => {
+            setIsRegister(!isRegister);
+            setError('');
+            reset();
+          }}
           className="w-full mt-2 text-gray-400 hover:text-white"
         >
           {isRegister ? '¿Ya tienes cuenta? Inicia Sesión' : '¿No tienes cuenta? Regístrate'}
