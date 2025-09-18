@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
 const schema = z.object({
+  username: z.string().min(3, 'Username debe tener al menos 3 caracteres'),
   email: z.string().email('Email inválido'),
   password: z.string().min(8, 'Contraseña debe tener al menos 8 caracteres'),
   confirmPassword: z.string().min(8, 'Contraseña debe tener al menos 8 caracteres'),
@@ -66,6 +67,19 @@ const AuthModal = ({ isOpen, onClose, onRegister, onLogin }) => {
           {isRegister ? 'Registrarse' : 'Iniciar Sesión'}
         </h2>
         <form onSubmit={handleSubmit(onSubmit)}>
+          {isRegister && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-white mb-1">
+                Username
+              </label>
+              <input
+                {...register('username')}
+                type="text"
+                className="w-full px-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-white"
+              />
+              {errors.username && <p className="text-red-500 text-xs mt-1">{errors.username.message}</p>}
+            </div>
+          )}
           <div className="mb-4">
             <label className="block text-sm font-medium text-white mb-1">
               Email

@@ -1,9 +1,14 @@
 const express = require('express');
 const passport = require('passport');
 const { body, validationResult } = require('express-validator');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const auth = require('../middleware/auth');
 
 const router = express.Router();
+
+// TODO: Move this to a .env file
+const JWT_SECRET = 'your-super-secret-key';
 
 // Register
 router.post('/register', [
@@ -30,7 +35,15 @@ router.post('/register', [
     const user = new User({ username, email, password });
     await user.save();
 
-    res.status(201).json({ message: 'Usuario creado exitosamente' });
+    const payload = { id: user.id, username: user.username };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
+
+    res.status(201).json({ 
+      message: 'Usuario creado exitosamente', 
+      token,
+      user: { id: user.id, username: user.username, email: user.email }
+    });
+
   } catch (error) {
     res.status(500).json({ message: 'Error del servidor' });
   }
@@ -38,44 +51,29 @@ router.post('/register', [
 
 // Login
 router.post('/login', (req, res, next) => {
-  passport.authenticate('local', (err, user, info) => {
+  passport.authenticate('local', { session: false }, (err, user, info) => {
     if (err) return next(err);
     if (!user) return res.status(400).json({ message: info.message });
     
-    req.logIn(user, (err) => {
-      if (err) return next(err);
-      res.json({ 
-        user: { 
-          id: user._id, 
-          username: user.username, 
-          email: user.email 
-        } 
-      });
+    const payload = { id: user.id, username: user.username };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
+
+    return res.json({ 
+      message: 'Inicio de sesión exitoso',
+      token,
+      user: { id: user.id, username: user.username, email: user.email }
     });
   })(req, res, next);
 });
 
-// Logout
+// Logout (client-side responsibility)
 router.post('/logout', (req, res) => {
-  req.logout((err) => {
-    if (err) return res.status(500).json({ message: 'Error al cerrar sesión' });
-    res.json({ message: 'Sesión cerrada' });
-  });
+  res.json({ message: 'Logout es responsabilidad del cliente' });
 });
 
 // Get current user
-router.get('/me', (req, res) => {
-  if (req.isAuthenticated()) {
-    res.json({ 
-      user: { 
-        id: req.user._id, 
-        username: req.user.username, 
-        email: req.user.email 
-      } 
-    });
-  } else {
-    res.status(401).json({ message: 'No autenticado' });
-  }
+router.get('/me', auth, (req, res) => {
+  res.json({ user: req.user });
 });
 
 module.exports = router;
