@@ -4,11 +4,7 @@
     {
       "src": "client/package.json",
       "use": "@vercel/static-build",
-      "config": {
-        "installCommand": "cd client && npm install",
-        "buildCommand": "cd client && npm run build",
-        "outputDirectory": "dist"
-      }
+      "config": { "distDir": "client/dist" }
     },
     {
       "src": "server/server.js",
@@ -22,7 +18,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/"
+      "destination": "/index.html"
     }
   ]
 }
